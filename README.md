@@ -229,6 +229,37 @@ Monitor from a cell:
 !tail -20 train-12346.log
 ```
 
+## Checkpointing (optional)
+
+SLURM jobs have a 48-hour time limit. For training runs that might take longer, save checkpoints periodically so you can resume in the next job.
+
+Since the home directory and scratch are shared NFS, any checkpoint saved during a job persists after it ends. Save to `~/checkpoints/` or `/scratch/users/yoursunetid/checkpoints/` for larger files.
+
+```python
+from pathlib import Path
+
+CHECKPOINT_DIR = Path.home() / "checkpoints"
+CHECKPOINT_DIR.mkdir(exist_ok=True)
+CHECKPOINT_PATH = CHECKPOINT_DIR / "model_checkpoint.pt"
+
+# Save during training
+torch.save({
+    "epoch": epoch,
+    "model_state_dict": model.state_dict(),
+    "optimizer_state_dict": optimizer.state_dict(),
+    "loss": loss,
+}, CHECKPOINT_PATH)
+
+# Resume at the start of the next job
+if CHECKPOINT_PATH.exists():
+    checkpoint = torch.load(CHECKPOINT_PATH, weights_only=False)
+    model.load_state_dict(checkpoint["model_state_dict"])
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+    start_epoch = checkpoint["epoch"] + 1
+```
+
+See `example.ipynb` for a complete working example.
+
 ## Resource tuning (optional)
 
 Pass resource flags when submitting. The defaults are:
