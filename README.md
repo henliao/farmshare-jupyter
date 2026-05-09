@@ -50,7 +50,26 @@ bash ~/farmshare-jupyter/setup.sh --scratch
 ./launch.sh yoursunetid
 ```
 
-This does everything: submits the SLURM job, waits for it to start, opens an SSH tunnel, and opens Jupyter in your browser.
+This does everything: submits the SLURM job, waits for it to start, opens an SSH tunnel, and opens Jupyter in your browser. Output looks like:
+
+```
+[1/5] Uploading scripts to FarmShare...
+[2/5] Submitting SLURM job...
+  Job ID: 12345
+[3/5] Waiting for job to start...
+  PENDING (0s)
+  PENDING (5s)
+[4/5] Reading connection info...
+  Node: oat-03, Port: 8542
+[5/5] Opening SSH tunnel (localhost:8888 -> oat-03:8542)...
+
+============================================
+Jupyter is ready at:
+  http://localhost:8888/lab?token=a1b2c3d4e5f6...
+============================================
+```
+
+On macOS it auto-opens that URL in your browser. If not, copy/paste the full URL (including the token).
 
 For CPU-only: `./launch.sh yoursunetid --cpu`
 
