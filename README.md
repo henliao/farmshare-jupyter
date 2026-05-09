@@ -37,7 +37,7 @@ bash ~/farmshare-jupyter/setup.sh
 
 This creates `~/jupyter-env` with Python 3.13, Jupyter Lab, PyTorch + CUDA, numpy, pandas, scikit-learn, matplotlib (~4.6 GB).
 
-To install on scratch instead (saves home quota):
+To install on scratch instead (optional, saves home quota):
 ```bash
 bash ~/farmshare-jupyter/setup.sh --scratch
 ```
@@ -103,7 +103,7 @@ ssh -L 8542:oat-03:8542 yoursunetid@rice.stanford.edu
 
 **3. Open the URL** in your browser.
 
-## Submitting training jobs from Jupyter
+## Submitting training jobs from Jupyter (optional)
 
 You can train directly in the notebook (you already have a GPU allocated). For longer runs that should outlive your Jupyter session, submit a separate SLURM job from a cell:
 
@@ -138,7 +138,7 @@ Monitor from a cell:
 !tail -20 train-12346.log
 ```
 
-## Resource tuning
+## Resource tuning (optional)
 
 Edit `jupyter-gpu.sbatch` (or `jupyter-cpu.sbatch`):
 
@@ -159,7 +159,7 @@ sinfo -p gpu                    # GPU node availability
 cat jupyter-JOBID.log           # Jupyter log (has token URL)
 ```
 
-## Adding packages
+## Adding packages (optional)
 
 From rice or a Jupyter terminal:
 ```bash
