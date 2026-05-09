@@ -103,6 +103,96 @@ ssh -L 8542:oat-03:8542 yoursunetid@rice.stanford.edu
 
 **3. Open the URL** in your browser.
 
+## Getting notebooks onto FarmShare
+
+Your home directory (`/home/users/yoursunetid/`) is shared across all login and compute nodes. Any file you put there is accessible everywhere. A few ways to get notebooks there:
+
+### Option 1: scp (copy files over SSH)
+
+From your laptop terminal:
+
+```bash
+# Copy a single notebook
+scp my_notebook.ipynb yoursunetid@rice.stanford.edu:~/
+
+# Copy a whole folder
+scp -r my_project/ yoursunetid@rice.stanford.edu:~/
+
+# Copy it into a specific directory
+scp my_notebook.ipynb yoursunetid@rice.stanford.edu:~/notebooks/
+```
+
+To download results back to your laptop:
+
+```bash
+# Copy output notebook back
+scp yoursunetid@rice.stanford.edu:~/my_notebook_output.ipynb .
+
+# Copy a whole folder back
+scp -r yoursunetid@rice.stanford.edu:~/my_project/ .
+```
+
+### Option 2: git clone
+
+From a rice login node (or a Jupyter terminal):
+
+```bash
+ssh yoursunetid@rice.stanford.edu
+git clone https://github.com/youruser/yourrepo.git ~/yourrepo
+```
+
+If the repo is private, you'll need to set up a GitHub personal access token or SSH key on FarmShare.
+
+### Option 3: Jupyter upload
+
+Once you have a Jupyter session running (Option A or B above), use the Jupyter Lab file browser to drag and drop or click the upload button.
+
+### Storage locations
+
+| Path | Quota | Backed up | Use for |
+|------|-------|-----------|---------|
+| `~/` (home) | ~15-20 GB | Yes | Code, notebooks, small datasets |
+| `/scratch/users/yoursunetid/` | Larger | No | Large datasets, temp files |
+| `/farmshare/user_data/yoursunetid/` | Varies | No | Shared project data |
+
+## Running a notebook as a batch job
+
+Run an existing `.ipynb` headlessly on a GPU node, no browser needed. The notebook executes start-to-finish and saves results to a new output file.
+
+From a rice login node:
+
+```bash
+bash ~/farmshare-jupyter/run-notebook.sh ~/my_notebook.ipynb
+```
+
+Output:
+```
+Submitting notebook: /home/users/yoursunetid/my_notebook.ipynb
+Output will be saved to: /home/users/yoursunetid/my_notebook_output.ipynb
+
+Job 12345 submitted.
+
+Monitor:
+  squeue -j 12345                                # job status
+  tail -f ~/nb-my_notebook-12345.log             # live output
+
+When done, your output notebook is:
+  /home/users/yoursunetid/my_notebook_output.ipynb
+```
+
+The output notebook (`*_output.ipynb`) contains all cell outputs, including plots and print statements. If a cell fails, execution stops and the error is captured in the output.
+
+Options:
+```bash
+bash run-notebook.sh notebook.ipynb --cpu          # CPU-only (no GPU)
+bash run-notebook.sh notebook.ipynb --timeout 7200 # 2-hour timeout per cell (default: 1 hour)
+```
+
+Download the output to view locally:
+```bash
+scp yoursunetid@rice.stanford.edu:~/my_notebook_output.ipynb .
+```
+
 ## Submitting training jobs from Jupyter (optional)
 
 You can train directly in the notebook (you already have a GPU allocated). For longer runs that should outlive your Jupyter session, submit a separate SLURM job from a cell:
@@ -190,5 +280,6 @@ No Jupyter restart needed, just restart the notebook kernel.
 | `setup.sh` | rice | One-time: creates venv with Jupyter + PyTorch |
 | `start.sh` | rice | Submits SLURM job, prints connection info |
 | `launch.sh` | your laptop | All-in-one: submit + tunnel + open browser |
+| `run-notebook.sh` | rice | Run a .ipynb headlessly as a SLURM batch job |
 | `jupyter-gpu.sbatch` | compute node | SLURM script for GPU sessions |
 | `jupyter-cpu.sbatch` | compute node | SLURM script for CPU-only sessions |
