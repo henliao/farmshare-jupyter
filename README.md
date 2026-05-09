@@ -171,7 +171,11 @@ No Jupyter restart needed, just restart the notebook kernel.
 
 ## Troubleshooting
 
-**Job stuck in PENDING.** All GPU nodes may be busy. Check `sinfo -p gpu`. Use `--cpu` for CPU-only, or request fewer resources.
+**Job stuck in PENDING.** All 6 GPU nodes may be occupied. The script waits up to 5 minutes, then shows current GPU availability and your options:
+- Keep waiting: your job stays in the queue and will start when a node frees up. Re-run the script to resume.
+- Switch to CPU: `./launch.sh yoursunetid --cpu` (or `bash start.sh --cpu`). More nodes available, rarely queued.
+- Request fewer resources: edit `jupyter-gpu.sbatch` to lower GPU/memory requirements.
+- Check availability: `sinfo -p gpu` shows which nodes are allocated/idle.
 
 **SSH tunnel dies.** Re-run the `ssh -L` command. Jupyter keeps running on the compute node.
 

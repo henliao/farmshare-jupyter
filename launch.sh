@@ -55,8 +55,18 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
 done
 
 if [ $ELAPSED -ge $MAX_WAIT ]; then
-    echo "Still waiting after ${MAX_WAIT}s."
-    echo "Check: ssh $REMOTE 'squeue -j $JOBID'"
+    echo ""
+    echo "Job $JOBID is still queued after ${MAX_WAIT}s. All GPU nodes may be busy."
+    echo ""
+    echo "Current GPU availability:"
+    ssh "$REMOTE" "sinfo -p gpu -o '  %N  %G  %C  %t'" 2>/dev/null
+    echo ""
+    echo "Your job is still in the queue and will start when a node frees up."
+    echo "You can:"
+    echo "  - Wait: run this script again (it will pick up the same job)"
+    echo "  - Check status: ssh $REMOTE 'squeue -j $JOBID'"
+    echo "  - Use CPU instead: ./launch.sh $SUNET --cpu"
+    echo "  - Cancel: ssh $REMOTE 'scancel $JOBID'"
     exit 1
 fi
 
