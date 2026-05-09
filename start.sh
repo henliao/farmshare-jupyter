@@ -8,14 +8,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SBATCH_FILE="${SCRIPT_DIR}/jupyter.sbatch"
 POLL_INTERVAL=5
 MAX_WAIT=300
 
+# Build sbatch args based on mode
 if [[ "${1:-}" == "--cpu" ]]; then
-    SBATCH_FILE="${SCRIPT_DIR}/jupyter-cpu.sbatch"
+    SBATCH_ARGS="--partition=normal --mem=16G"
     echo "Submitting CPU-only Jupyter job..."
 else
-    SBATCH_FILE="${SCRIPT_DIR}/jupyter-gpu.sbatch"
+    SBATCH_ARGS="--partition=gpu --gres=gpu:1 --mem=32G"
     echo "Submitting GPU Jupyter job..."
 fi
 
@@ -24,7 +26,7 @@ if [ ! -f "$SBATCH_FILE" ]; then
     exit 1
 fi
 
-JOBID=$(sbatch "$SBATCH_FILE" 2>&1 | grep -o '[0-9]*')
+JOBID=$(sbatch $SBATCH_ARGS "$SBATCH_FILE" 2>&1 | grep -o '[0-9]*')
 if [ -z "$JOBID" ]; then
     echo "Failed to submit job."
     exit 1

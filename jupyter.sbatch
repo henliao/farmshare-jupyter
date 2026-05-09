@@ -1,12 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name=jupyter
-#SBATCH --partition=normal
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
 #SBATCH --time=2-00:00:00
 #SBATCH --output=%x-%j.log
 
 module load python/3.13.11
+
+# Load GPU modules if on a GPU partition
+if [ -n "$CUDA_VISIBLE_DEVICES" ] || sinfo -N -n "$(hostname)" -o "%G" 2>/dev/null | grep -q "gpu"; then
+    module load cuda/12.9.0
+    module load cudnn/9.8.0.87-12
+fi
 
 # Activate venv (check both home and scratch)
 if [ -d "$HOME/jupyter-env" ]; then

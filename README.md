@@ -32,6 +32,7 @@ The setup script handles this automatically.
 ssh yoursunetid@rice.stanford.edu
 
 git clone https://github.com/henliao/farmshare-jupyter.git ~/farmshare-jupyter
+chmod +x ~/farmshare-jupyter/*.sh
 bash ~/farmshare-jupyter/setup.sh
 ```
 
@@ -230,13 +231,18 @@ Monitor from a cell:
 
 ## Resource tuning (optional)
 
-Edit `jupyter-gpu.sbatch` (or `jupyter-cpu.sbatch`):
+Pass resource flags when submitting. The defaults are:
 
+| Flag | GPU default | CPU default |
+|------|-------------|-------------|
+| `--gres` | `gpu:1` | (none) |
+| `--mem` | `32G` | `16G` |
+| `--cpus-per-task` | `4` | `4` |
+| `--time` | `2-00:00:00` | `2-00:00:00` |
+
+To request more GPUs or memory, edit `jupyter.sbatch` or pass flags directly:
 ```bash
-#SBATCH --gres=gpu:1          # 1-4 GPUs
-#SBATCH --cpus-per-task=4     # CPU cores
-#SBATCH --mem=32G             # RAM
-#SBATCH --time=2-00:00:00     # max 2 days
+sbatch --partition=gpu --gres=gpu:2 --mem=64G ~/farmshare-jupyter/jupyter.sbatch
 ```
 
 ## Job management
@@ -251,10 +257,15 @@ cat jupyter-JOBID.log           # Jupyter log (has token URL)
 
 ## Adding packages (optional)
 
-From rice or a Jupyter terminal:
+From rice, a Jupyter terminal, or a notebook cell:
 ```bash
 source ~/jupyter-env/bin/activate
 pip install somepackage
+```
+
+From a notebook cell:
+```python
+%pip install somepackage
 ```
 
 No Jupyter restart needed, just restart the notebook kernel.
@@ -264,12 +275,15 @@ No Jupyter restart needed, just restart the notebook kernel.
 **Job stuck in PENDING.** All 6 GPU nodes may be occupied. The script waits up to 5 minutes, then shows current GPU availability and your options:
 - Keep waiting: your job stays in the queue and will start when a node frees up. Re-run the script to resume.
 - Switch to CPU: `./launch.sh yoursunetid --cpu` (or `bash start.sh --cpu`). More nodes available, rarely queued.
-- Request fewer resources: edit `jupyter-gpu.sbatch` to lower GPU/memory requirements.
+- Request fewer resources: lower GPU/memory requirements.
 - Check availability: `sinfo -p gpu` shows which nodes are allocated/idle.
 
 **SSH tunnel dies.** Re-run the `ssh -L` command. Jupyter keeps running on the compute node.
 
-**Token lost.** `grep token jupyter-JOBID.log` or `cat ~/jupyter-logs/jupyter_JOBID.info`
+**Token lost.** Find your job ID with `squeue -u yoursunetid`, then:
+```bash
+cat ~/jupyter-logs/jupyter_JOBID.info
+```
 
 **Disk quota.** Venv is ~4.6 GB. Reinstall on scratch: `rm -rf ~/jupyter-env && bash setup.sh --scratch`
 
@@ -281,5 +295,5 @@ No Jupyter restart needed, just restart the notebook kernel.
 | `start.sh` | rice | Submits SLURM job, prints connection info |
 | `launch.sh` | your laptop | All-in-one: submit + tunnel + open browser |
 | `run-notebook.sh` | rice | Run a .ipynb headlessly as a SLURM batch job |
-| `jupyter-gpu.sbatch` | compute node | SLURM script for GPU sessions |
-| `jupyter-cpu.sbatch` | compute node | SLURM script for CPU-only sessions |
+| `jupyter.sbatch` | compute node | SLURM script (handles both GPU and CPU) |
+| `example.ipynb` | compute node | GPU smoke test notebook |

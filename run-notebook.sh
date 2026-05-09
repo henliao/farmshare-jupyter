@@ -65,8 +65,10 @@ ${GPU_LINE}
 #SBATCH --output=${NOTEBOOK_DIR}/nb-${NOTEBOOK_NAME}-%j.log
 
 module load python/3.13.11
-module load cuda/12.9.0
-module load cudnn/9.8.0.87-12
+if [ "${PARTITION}" = "gpu" ]; then
+    module load cuda/12.9.0
+    module load cudnn/9.8.0.87-12
+fi
 
 # Activate venv
 if [ -d "\$HOME/jupyter-env" ]; then

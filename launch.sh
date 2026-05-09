@@ -2,32 +2,46 @@
 # One-command launcher: submit job, wait, open SSH tunnel, open browser.
 # Run this from your local machine (Mac/Linux).
 #
-# Usage: ./launch.sh [sunetid] [--cpu]
-#   sunetid  Your Stanford username (default: hankliao)
+# Usage: ./launch.sh <sunetid> [--cpu]
 #   --cpu    Use CPU-only partition
 
 set -euo pipefail
 
-SUNET="${1:-hankliao}"
+# Parse args
+SUNET=""
+CPU_MODE=false
+for arg in "$@"; do
+    if [ "$arg" = "--cpu" ]; then
+        CPU_MODE=true
+    elif [ -z "$SUNET" ]; then
+        SUNET="$arg"
+    fi
+done
+
+if [ -z "$SUNET" ]; then
+    echo "Usage: ./launch.sh <sunetid> [--cpu]"
+    echo "Example: ./launch.sh yoursunetid"
+    exit 1
+fi
+
 REMOTE="${SUNET}@rice.stanford.edu"
 LOCAL_PORT="${LOCAL_PORT:-8888}"
 POLL_INTERVAL=5
 MAX_WAIT=300
 
-# Check for --cpu flag
-SBATCH_FILE="jupyter-gpu.sbatch"
-for arg in "$@"; do
-    if [ "$arg" = "--cpu" ]; then
-        SBATCH_FILE="jupyter-cpu.sbatch"
-    fi
-done
+if [ "$CPU_MODE" = true ]; then
+    SBATCH_ARGS="--partition=normal --mem=16G"
+    echo "[1/5] Uploading scripts to FarmShare (CPU mode)..."
+else
+    SBATCH_ARGS="--partition=gpu --gres=gpu:1 --mem=32G"
+    echo "[1/5] Uploading scripts to FarmShare..."
+fi
 
-echo "[1/5] Uploading scripts to FarmShare..."
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-scp -q "$SCRIPT_DIR/$SBATCH_FILE" "$REMOTE:~/farmshare-jupyter/$SBATCH_FILE"
+scp -q "$SCRIPT_DIR/jupyter.sbatch" "$REMOTE:~/farmshare-jupyter/jupyter.sbatch"
 
 echo "[2/5] Submitting SLURM job..."
-JOB_OUTPUT=$(ssh "$REMOTE" "bash -l -c 'sbatch ~/farmshare-jupyter/$SBATCH_FILE'")
+JOB_OUTPUT=$(ssh "$REMOTE" "bash -l -c 'sbatch $SBATCH_ARGS ~/farmshare-jupyter/jupyter.sbatch'")
 JOBID=$(echo "$JOB_OUTPUT" | grep -o '[0-9]\+')
 
 if [ -z "$JOBID" ]; then
